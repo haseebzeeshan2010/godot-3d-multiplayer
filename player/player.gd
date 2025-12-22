@@ -18,23 +18,63 @@ var jump_counter = 0
 var camera_instance
 
 func _ready():
-	camera_instance = player_camera.instantiate()
-	camera_instance.global_position.y = camera_height
-	get_tree().current_scene.add_child.call_deferred(camera_instance)
+	set_up_camera()
 
 # Camera Follow without Smoothing
 # func _process(delta: float) -> void:
 # 	camera_instance.global_position.x = global_position.x
 
+func _process(_delta: float) -> void:
+	pass
+
+
 func _physics_process(_delta: float) -> void:
 	#Smooth Camera Follow
-	camera_instance.global_position.x = lerp(camera_instance.global_position.x, global_position.x, _delta * 5.0)
-
+	update_camera_pos(global_position.x, _delta)
 	#Move the Player
 	var horizontal_input = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
 	velocity.x = horizontal_input * movement_speed
 	velocity.y += gravity
 	
+	#Handle Movement States
+	handle_movement_state()
+
+	
+	#Moves the player(built-in function)
+	move_and_slide()
+
+	#Face Movement Direction
+	face_movement_direction(horizontal_input)
+
+	
+
+	
+
+# Animation Finished Signal Handle
+func _on_animated_sprite_2d_animation_finished() -> void:
+	player_sprite.play("jump")
+
+#Set up Camera
+func set_up_camera():
+	camera_instance = player_camera.instantiate()
+	camera_instance.global_position.y = camera_height
+	get_tree().current_scene.add_child.call_deferred(camera_instance)
+
+#Smooth Camera Follow
+func update_camera_pos(new_x_position: float, _delta: float) -> void:
+	camera_instance.global_position.x = lerp(camera_instance.global_position.x, new_x_position, _delta * 5.0)
+
+#Flip the Player
+func face_movement_direction(horizontal_input: float) -> void:
+	if not is_zero_approx(horizontal_input):
+		if horizontal_input < 0:
+			player_sprite.scale = Vector2(-initial_sprite_scale.x, initial_sprite_scale.y)
+		elif horizontal_input > 0:
+			player_sprite.scale = initial_sprite_scale
+
+
+#Handle Movement States
+func handle_movement_state() -> void:
 	#Setup Character States
 	var is_falling = velocity.y > 0 and not is_on_floor()
 	var is_jumping = Input.is_action_just_pressed("jump") and is_on_floor()
@@ -43,32 +83,6 @@ func _physics_process(_delta: float) -> void:
 	var is_idle = is_on_floor() and is_zero_approx(velocity.x)
 	var is_walking = is_on_floor() and not is_zero_approx(velocity.x)
 	
-
-	if is_jumping:
-		jump_counter += 1
-		velocity.y = -jump_strength
-	elif is_double_jumping:
-		jump_counter += 1
-		if jump_counter <= max_jumps:
-			velocity.y = -jump_strength
-	#elif is_jump_cancelled:
-		#velocity.y = 0.0
-	elif is_on_floor():
-		jump_counter = 0
-
-	
-
-	move_and_slide()
-
-	#Flip the Player
-	if not is_zero_approx(horizontal_input):
-		if horizontal_input < 0:
-			player_sprite.scale = Vector2(-initial_sprite_scale.x, initial_sprite_scale.y)
-		elif horizontal_input > 0:
-			player_sprite.scale = initial_sprite_scale
-
-	
-
 	#Play Animations
 	if is_jumping:
 		player_sprite.play("jump_start")
@@ -82,6 +96,15 @@ func _physics_process(_delta: float) -> void:
 	elif is_idle:
 		player_sprite.play("idle")
 
-
-func _on_animated_sprite_2d_animation_finished() -> void:
-	player_sprite.play("jump")
+	#Handle Jumping Logic
+	if is_jumping:
+		jump_counter += 1
+		velocity.y = -jump_strength
+	elif is_double_jumping:
+		jump_counter += 1
+		if jump_counter <= max_jumps:
+			velocity.y = -jump_strength
+	#elif is_jump_cancelled:
+		#velocity.y = 0.0
+	elif is_on_floor():
+		jump_counter = 0
