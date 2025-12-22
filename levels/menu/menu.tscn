@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://bvgsxis3wx1uj"]
+[gd_scene load_steps=6 format=3 uid="uid://bvgsxis3wx1uj"]
 
 [ext_resource type="Texture2D" uid="uid://bja0wl8tcw71c" path="res://art/backgrounds/background_01.png" id="1_1iesk"]
+[ext_resource type="Script" uid="uid://cdov2f2kln1br" path="res://levels/menu/menu.gd" id="1_f5yhj"]
 [ext_resource type="Texture2D" uid="uid://bujx43rcy5b85" path="res://art/backgrounds/background_02.png" id="2_f5yhj"]
 
 [sub_resource type="SystemFont" id="SystemFont_4wbge"]
@@ -10,13 +11,16 @@ font_names = PackedStringArray("Consolas")
 font = SubResource("SystemFont_4wbge")
 font_size = 64
 
-[node name="Menu" type="Control"]
+[node name="Menu" type="Control" node_paths=PackedStringArray("ip_line_edit", "status_label")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_f5yhj")
+ip_line_edit = NodePath("HBoxContainer/IPLineEdit")
+status_label = NodePath("StatusLabel")
 
 [node name="BackgroundTrees" type="TextureRect" parent="."]
 layout_mode = 1
@@ -27,7 +31,6 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_1iesk")
 expand_mode = 2
-stretch_mode = 4
 
 [node name="BackgroundHouses" type="TextureRect" parent="."]
 layout_mode = 1
@@ -38,7 +41,6 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_f5yhj")
 expand_mode = 2
-stretch_mode = 4
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 0
@@ -79,3 +81,7 @@ grow_vertical = 2
 label_settings = SubResource("LabelSettings_3cyc0")
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[connection signal="pressed" from="HBoxContainer/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
