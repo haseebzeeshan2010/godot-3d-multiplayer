@@ -1,4 +1,4 @@
-[gd_scene load_steps=71 format=3 uid="uid://c7ewkv2qw438t"]
+[gd_scene load_steps=72 format=3 uid="uid://c7ewkv2qw438t"]
 
 [ext_resource type="Script" uid="uid://cudcg3143v7yu" path="res://player/player.gd" id="1_hggc2"]
 [ext_resource type="Texture2D" uid="uid://cln1ubxiy43oh" path="res://art/characters/elf/double_jump_start/0_Dark_Elves_Double Jump_000.png" id="1_or4qq"]
@@ -303,10 +303,22 @@ animations = [{
 "speed": 24.0
 }]
 
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_b2j0d"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("AnimatedSprite2D:animation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath("AnimatedSprite2D:scale:x")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+
 [node name="Player" type="CharacterBody2D" node_paths=PackedStringArray("player_sprite")]
 script = ExtResource("1_hggc2")
-player_sprite = NodePath("AnimatedSprite2D")
 player_camera = ExtResource("2_b2j0d")
+player_sprite = NodePath("AnimatedSprite2D")
+max_jumps = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -28)
@@ -319,5 +331,8 @@ sprite_frames = SubResource("SpriteFrames_o20oj")
 animation = &"idle"
 autoplay = "idle"
 frame_progress = 0.16522083
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_b2j0d")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

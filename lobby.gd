@@ -11,7 +11,7 @@ const MAX_CONNECTIONS = 2
 
 # Setup variables
 var players = {}
-var player_info = {"name" : "Missing Name"} #Default for name key is "Name"
+var player_info = {"name": "Missing Name"} # Default for name key is "Name"
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_player_connected)
@@ -70,6 +70,6 @@ func _on_connection_failed() -> void:
 	multiplayer.multiplayer_peer = null # Clear the multiplayer peer on failure
 
 func _on_server_disconnected() -> void:
-	multiplayer.multiplayer_peer = null # Clear the multiplayer peer on disconnection
+	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new() # Set to offline peer
 	players.clear() # Clear the players dictionary
 	server_disconnected.emit()

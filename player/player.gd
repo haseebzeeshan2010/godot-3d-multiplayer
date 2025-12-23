@@ -13,11 +13,18 @@ extends CharacterBody2D
 
 @onready var initial_sprite_scale = player_sprite.scale
 
-
+var owner_id = 1
 var jump_counter = 0
 var camera_instance
 
-func _ready():
+func _enter_tree():
+	print(name.to_int())
+	owner_id = name.to_int()
+	set_multiplayer_authority(owner_id)
+	if owner_id != multiplayer.get_unique_id():
+		return
+	
+	
 	set_up_camera()
 
 # Camera Follow without Smoothing
@@ -29,8 +36,15 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	# Only process input and movement for the local player
+	if multiplayer.multiplayer_peer == null:
+		return
+	if owner_id != multiplayer.get_unique_id():
+		return
+
 	#Smooth Camera Follow
 	update_camera_pos(global_position.x, _delta)
+	
 	#Move the Player
 	var horizontal_input = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
 	velocity.x = horizontal_input * movement_speed
@@ -75,36 +89,44 @@ func face_movement_direction(horizontal_input: float) -> void:
 
 #Handle Movement States
 func handle_movement_state() -> void:
-	#Setup Character States
-	var is_falling = velocity.y > 0 and not is_on_floor()
-	var is_jumping = Input.is_action_just_pressed("jump") and is_on_floor()
-	var is_double_jumping = Input.is_action_just_pressed("jump") and is_falling
-	var is_jump_cancelled = Input.is_action_just_released("jump") and velocity.y < 0
-	var is_idle = is_on_floor() and is_zero_approx(velocity.x)
-	var is_walking = is_on_floor() and not is_zero_approx(velocity.x)
+	var is_grounded = is_on_floor()
+	var wants_to_jump = Input.is_action_just_pressed("jump")
+	var is_moving = not is_zero_approx(velocity.x)
 	
-	#Play Animations
-	if is_jumping:
-		player_sprite.play("jump_start")
-	
-	elif is_double_jumping:
-		player_sprite.play("double_jump_start")
-	elif is_walking:
-		player_sprite.play("walk")
-	elif is_falling:
-		player_sprite.play("fall")
-	elif is_idle:
-		player_sprite.play("idle")
-
-	#Handle Jumping Logic
-	if is_jumping:
-		jump_counter += 1
-		velocity.y = -jump_strength
-	elif is_double_jumping:
-		jump_counter += 1
-		if jump_counter <= max_jumps:
+	# Handle jumping logic first (before animations)
+	if wants_to_jump:
+		if is_grounded:
+			# Regular jump from ground
+			jump_counter = 1
 			velocity.y = -jump_strength
-	#elif is_jump_cancelled:
-		#velocity.y = 0.0
-	elif is_on_floor():
+			player_sprite.play("jump_start")
+			return
+		elif jump_counter < max_jumps:
+			# Air jump (double jump, triple jump, etc.)
+			jump_counter += 1
+			velocity.y = -jump_strength
+			player_sprite.play("double_jump_start")
+			return
+	
+	# Reset jump counter when landing
+	if is_grounded:
 		jump_counter = 0
+	
+	# Handle jump release for variable jump height (optional)
+	if Input.is_action_just_released("jump") and velocity.y < 0:
+		velocity.y *= 0.5  # Cut jump short for tap jumps
+	
+	# Play animations based on current state
+	if is_grounded:
+		if is_moving:
+			player_sprite.play("walk")
+		else:
+			player_sprite.play("idle")
+	else:
+		# Airborne
+		if velocity.y < 0:
+			# Only play jump if not already in a jump animation
+			if not player_sprite.animation.begins_with("jump") and not player_sprite.animation.begins_with("double"):
+				player_sprite.play("jump")
+		else:
+			player_sprite.play("fall")
