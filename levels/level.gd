@@ -17,9 +17,9 @@ func _ready():
 	for id in multiplayer.get_peers(): # Add a player for each connected peer
 		add_player(id)
 
-	add_player(1) # Add a player for the host itself
-
-
+	#WILL REMOVE FOR SERVER TESTING
+	if not OS.has_feature("dedicated_server"):
+		add_player(1) # Add a player for the host itself
 
 
 func _exit_tree():
@@ -28,7 +28,7 @@ func _exit_tree():
 		return
 
 	# Only the host/server manages players
-	if not multiplayer.is_server(): 
+	if not multiplayer.is_server():
 		return
 
 	# multiplayer.peer_connected.disconnect(add_player) # Unsubscribe from signal

@@ -7,19 +7,25 @@ signal server_disconnected
 
 # Setup constants
 const PORT = 7000
-const MAX_CONNECTIONS = 2
+
+var MAX_CONNECTIONS = 2 # Add 1 than expected no. of players for server hosting
 
 # Setup variables
 var players = {}
 var player_info = {"name": "Missing Name"} # Default for name key is "Name"
 
 func _ready() -> void:
+	if OS.has_feature("dedicated_server"):
+		MAX_CONNECTIONS += 1 # Increase max connections for dedicated server builds
+
+
 	multiplayer.peer_connected.connect(_on_player_connected)
 	multiplayer.peer_disconnected.connect(_on_player_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
+	
 func create_game():
 	# Create a new ENet multiplayer peer for the server
 	var peer = ENetMultiplayerPeer.new()
@@ -50,6 +56,9 @@ func join_game(ip_address: String):
 
 func _on_player_connected(id: int) -> void:
 	_register_player.rpc_id(id, player_info) # Request the new player to register themselves
+	
+	print("Player connected with ID: %d" % id)
+
 
 @rpc("any_peer", "reliable")
 func _register_player(new_player_info):

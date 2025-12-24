@@ -36,6 +36,10 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	# Only the authority should run physics
+	if not is_multiplayer_authority():
+		return
+
 	# Only process input and movement for the local player
 	if multiplayer.multiplayer_peer == null:
 		return
@@ -61,9 +65,6 @@ func _physics_process(_delta: float) -> void:
 	face_movement_direction(horizontal_input)
 
 	
-
-	
-
 # Animation Finished Signal Handle
 func _on_animated_sprite_2d_animation_finished() -> void:
 	player_sprite.play("jump")
@@ -98,13 +99,13 @@ func handle_movement_state() -> void:
 		if is_grounded:
 			# Regular jump from ground
 			jump_counter = 1
-			velocity.y = -jump_strength
+			velocity.y = - jump_strength
 			player_sprite.play("jump_start")
 			return
 		elif jump_counter < max_jumps:
 			# Air jump (double jump, triple jump, etc.)
 			jump_counter += 1
-			velocity.y = -jump_strength
+			velocity.y = - jump_strength
 			player_sprite.play("double_jump_start")
 			return
 	
@@ -114,7 +115,7 @@ func handle_movement_state() -> void:
 	
 	# Handle jump release for variable jump height (optional)
 	if Input.is_action_just_released("jump") and velocity.y < 0:
-		velocity.y *= 0.5  # Cut jump short for tap jumps
+		velocity.y *= 0.5 # Cut jump short for tap jumps
 	
 	# Play animations based on current state
 	if is_grounded:
