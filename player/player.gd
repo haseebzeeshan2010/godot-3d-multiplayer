@@ -14,8 +14,18 @@ extends CharacterBody2D
 @onready var initial_sprite_scale = player_sprite.scale
 
 var owner_id = 1
-var jump_counter = 0
+var jump_count = 0
 var camera_instance
+var state = PlayerState.IDLE # Set to default state
+
+enum PlayerState {
+	IDLE,
+	WALKING,
+	JUMP_STARTED,
+	JUMPING,
+	DOUBLE_JUMPING,
+	FALLING
+}
 
 func _enter_tree():
 	print(name.to_int())
@@ -37,8 +47,8 @@ func _process(_delta: float) -> void:
 
 func _physics_process(_delta: float) -> void:
 	# Only the authority should run physics
-	if not is_multiplayer_authority():
-		return
+	# if not is_multiplayer_authority():
+	# 	return
 
 	# Only process input and movement for the local player
 	if multiplayer.multiplayer_peer == null:
@@ -89,45 +99,45 @@ func face_movement_direction(horizontal_input: float) -> void:
 
 
 #Handle Movement States
-func handle_movement_state() -> void:
-	var is_grounded = is_on_floor()
-	var wants_to_jump = Input.is_action_just_pressed("jump")
-	var is_moving = not is_zero_approx(velocity.x)
-	
-	# Handle jumping logic first (before animations)
-	if wants_to_jump:
-		if is_grounded:
-			# Regular jump from ground
-			jump_counter = 1
-			velocity.y = - jump_strength
-			player_sprite.play("jump_start")
-			return
-		elif jump_counter < max_jumps:
-			# Air jump (double jump, triple jump, etc.)
-			jump_counter += 1
-			velocity.y = - jump_strength
-			player_sprite.play("double_jump_start")
-			return
-	
-	# Reset jump counter when landing
-	if is_grounded:
-		jump_counter = 0
-	
-	# Handle jump release for variable jump height (optional)
-	if Input.is_action_just_released("jump") and velocity.y < 0:
-		velocity.y *= 0.5 # Cut jump short for tap jumps
-	
-	# Play animations based on current state
-	if is_grounded:
-		if is_moving:
-			player_sprite.play("walk")
-		else:
-			player_sprite.play("idle")
+func handle_movement_state():
+	# Decide State Of Player
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+		state = PlayerState.JUMP_STARTED
+	elif is_on_floor() and is_zero_approx(velocity.x):
+		state = PlayerState.IDLE
+	elif is_on_floor() and not is_zero_approx(velocity.x):
+		state = PlayerState.WALKING
 	else:
-		# Airborne
-		if velocity.y < 0:
-			# Only play jump if not already in a jump animation
-			if not player_sprite.animation.begins_with("jump") and not player_sprite.animation.begins_with("double"):
-				player_sprite.play("jump")
+		state = PlayerState.JUMPING
+	
+	if velocity.y > 0.0 and not is_on_floor():
+		if Input.is_action_just_pressed("jump"):
+			state = PlayerState.DOUBLE_JUMPING
 		else:
+			state = PlayerState.FALLING
+	
+	# Process States For Player
+	match state:
+		PlayerState.IDLE:
+			player_sprite.play("idle")
+			jump_count = 0
+		PlayerState.WALKING:
+			player_sprite.play("walk")
+			jump_count = 0
+		PlayerState.JUMP_STARTED:
+			player_sprite.play("jump_start")
+			jump_count += 1
+			velocity.y = -jump_strength
+		PlayerState.JUMPING:
+			pass
+		PlayerState.DOUBLE_JUMPING:
+			player_sprite.play("double_jump_start")
+			jump_count += 1
+			if jump_count <= max_jumps:
+				velocity.y = -jump_strength
+		PlayerState.FALLING:
 			player_sprite.play("fall")
+		
+	# Jump Cancelling
+	if Input.is_action_just_released("jump") and velocity.y < 0.0:
+		velocity.y = 0.0
