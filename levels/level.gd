@@ -59,3 +59,7 @@ func get_spawn_point():
 	if next_spawn_point_index >= len(spawn_points):
 		next_spawn_point_index = 0
 	return spawn_point
+
+
+func _on_test_interact(state: Variant) -> void:
+	pass # Replace with function body.

@@ -1,8 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://c1dqacti67xtj"]
+[gd_scene load_steps=8 format=3 uid="uid://c1dqacti67xtj"]
 
 [ext_resource type="Script" uid="uid://du448lo0h3kf5" path="res://interactables/chest/chest.gd" id="1_pmapc"]
 [ext_resource type="Texture2D" uid="uid://bb74mmf3rdg4r" path="res://art/objects/Chest_01_Locked.png" id="2_rh8pd"]
 [ext_resource type="Texture2D" uid="uid://ctvthkqtgqmgm" path="res://art/objects/Chest_01_Unlocked.png" id="3_1cndp"]
+[ext_resource type="PackedScene" uid="uid://dsmwkelf8vdo0" path="res://interactables/interactable.tscn" id="4_rh8pd"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1cndp"]
+radius = 40.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_i1jmr"]
 size = Vector2(50, 40)
@@ -28,6 +32,12 @@ position = Vector2(0, -29)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("3_1cndp")
 
+[node name="Interactable" parent="." instance=ExtResource("4_rh8pd")]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactable"]
+position = Vector2(0, -20)
+shape = SubResource("CircleShape2D_1cndp")
+
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 collision_mask = 0
 
@@ -38,4 +48,5 @@ shape = SubResource("RectangleShape2D_i1jmr")
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_hhpgc")
 
+[connection signal="interacted" from="Interactable" to="." method="_on_interactable_interacted"]
 [connection signal="delta_synchronized" from="MultiplayerSynchronizer" to="." method="_on_multiplayer_synchronizer_delta_synchronized"]
