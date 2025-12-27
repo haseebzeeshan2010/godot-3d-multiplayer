@@ -17,11 +17,11 @@ func _ready():
 	if OS.has_feature("dedicated_server"):
 		_on_host_button_pressed()
 
-func _on_lobby_player_connected(peer_id, player_info):
+func _on_lobby_player_connected(_peer_id, _player_info):
 	# Auto-start when 2 players connected for server builds
 	if OS.has_feature("dedicated_server") and Lobby.players.size() >= Lobby.MAX_CONNECTIONS:
 		_on_start_button_pressed()
-		print("Starting game as %s players have connected." % (Lobby.players.size()-1))
+		print("Starting game as %s players have connected." % (Lobby.players.size() - 1))
 
 func _on_host_button_pressed():
 	not_connected_hbox.hide()

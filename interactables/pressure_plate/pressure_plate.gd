@@ -31,5 +31,5 @@ func set_plate_properties():
 	plate_down.visible = is_down
 	plate_up.visible = !is_down
 
-func _on_multiplayer_synchronizer_synchronized():
+func _on_multiplayer_synchronizer_delta_synchronized():
 	set_plate_properties()

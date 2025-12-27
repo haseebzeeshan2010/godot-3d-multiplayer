@@ -43,11 +43,12 @@ tile_size = Vector2i(128, 128)
 physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_mckh2")
 
-[node name="Level_01" type="Node2D" node_paths=PackedStringArray("players_container", "spawn_points")]
+[node name="Level_01" type="Node2D" node_paths=PackedStringArray("players_container", "spawn_points", "player_spawner")]
 script = ExtResource("1_dm0pi")
 players_container = NodePath("----- Players -----/PlayersContainer")
 player_scene = ExtResource("2_mckh2")
-spawn_points = [NodePath("----- Players -----/SpawnPoint_0"), NodePath("----- Players -----/SpawnPoint_1")]
+spawn_points = [NodePath("----- Players -----/SpawnPoint_0"), NodePath("----- Players -----/SpawnPoint_1"), NodePath("----- Players -----/SpawnPoint_2")]
+player_spawner = NodePath("----- Players -----/PlayerSpawner")
 
 [node name="------ Environment -----" type="Node" parent="."]
 
@@ -97,12 +98,15 @@ position = Vector2(1109, 124)
 [node name="PlayerSpawner" type="MultiplayerSpawner" parent="----- Players -----"]
 _spawnable_scenes = PackedStringArray("uid://c7ewkv2qw438t")
 spawn_path = NodePath("../PlayersContainer")
-spawn_limit = 2
+spawn_limit = 3
 
 [node name="SpawnPoint_0" type="Node2D" parent="----- Players -----"]
 position = Vector2(-70, 92)
 
 [node name="SpawnPoint_1" type="Node2D" parent="----- Players -----"]
 position = Vector2(150, 97)
+
+[node name="SpawnPoint_2" type="Node2D" parent="----- Players -----"]
+position = Vector2(367, 98)
 
 [connection signal="toggle" from="----- Interactables -----/PressurePlate" to="----- Interactables -----/Door" method="activate"]

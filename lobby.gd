@@ -8,7 +8,7 @@ signal server_disconnected
 # Setup constants
 const PORT = 7000
 
-var MAX_CONNECTIONS = 2 # Add 1 than expected no. of players for server hosting
+var MAX_CONNECTIONS = 3 # Add 1 than expected no. of players for server hosting
 
 # Setup variables
 var players = {}

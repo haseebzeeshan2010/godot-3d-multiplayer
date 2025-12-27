@@ -3,49 +3,56 @@ extends Node2D
 @export var players_container: Node2D
 @export var player_scene: PackedScene
 @export var spawn_points: Array[Node2D]
+@export var player_spawner: MultiplayerSpawner
 
 var next_spawn_point_index: int = 0
 
 func _ready():
-	if not multiplayer.is_server(): # Only the host/server manages players
-		return
-
-	# multiplayer.peer_connected.connect(add_player) # Subscribe to signal to add players when they join(for late joiners, though disabled as this game doesn't have any)
-
-	multiplayer.peer_disconnected.connect(delete_player) # Subscribe to signal to remove players when they leave
-
-	for id in multiplayer.get_peers(): # Add a player for each connected peer
-		add_player(id)
-
-	#WILL REMOVE FOR SERVER TESTING
-	if not OS.has_feature("dedicated_server"):
-		add_player(1) # Add a player for the host itself
-
-
-func _exit_tree():
-	# Only process input and movement for the local player
-	if multiplayer.multiplayer_peer == null:
-		return
-
-	# Only the host/server manages players
+	# Set custom spawn function
+	player_spawner.spawn_function = spawn_player
+	
 	if not multiplayer.is_server():
 		return
 
-	# multiplayer.peer_connected.disconnect(add_player) # Unsubscribe from signal
-	multiplayer.peer_disconnected.disconnect(delete_player) # Unsubscribe from signal
+	multiplayer.peer_disconnected.connect(delete_player) # Subscribe to disconnection signal
 
-func add_player(id):
-	var player_instance = player_scene.instantiate()
-	player_instance.position = get_spawn_point()
-	player_instance.name = str(id) # Set the name of the player node to the peer ID for easy access
-	players_container.add_child(player_instance)
+	var peers = multiplayer.get_peers() # Get list of connected peers
+	
+	for id in peers:
+		add_player(id) # Add existing players from peers list
 
-func delete_player(id):
-	if not players_container.has_node(str(id)): # Check if player exists, return if not
+	if not OS.has_feature("dedicated_server"):
+		add_player(1) # Add a player for the host itself
+
+# Cleanup on exit
+func _exit_tree():
+	if multiplayer.multiplayer_peer == null:
 		return
+	if not multiplayer.is_server(): # Only the server manages player disconnections
+		return
+	multiplayer.peer_disconnected.disconnect(delete_player) # Unsubscribe from disconnection signal
 
-	players_container.get_node(str(id)).queue_free() # Remove player node
+# Function to add a player with given ID
+func add_player(id):
+	var spawn_pos = get_spawn_point()
+	# Pass both id and position as spawn data
+	player_spawner.spawn({"id": id, "position": spawn_pos})
 
+# This function is called by the player_spawner to instantiate a player with correct data
+func spawn_player(data):
+	# This runs on ALL peers (server and clients)
+	var player_instance = player_scene.instantiate()
+	player_instance.name = str(data["id"])
+	player_instance.position = data["position"]
+	return player_instance
+
+# Function to delete a player with given ID
+func delete_player(id):
+	if not players_container.has_node(str(id)):
+		return
+	players_container.get_node(str(id)).queue_free()
+
+# Function to get the next spawn point
 func get_spawn_point():
 	var spawn_point = spawn_points[next_spawn_point_index].position
 	next_spawn_point_index += 1
