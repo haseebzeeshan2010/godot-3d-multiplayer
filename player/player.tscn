@@ -330,6 +330,7 @@ position = Vector2(0, -28)
 shape = SubResource("RectangleShape2D_aodj5")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+z_index = 1
 position = Vector2(0, -30)
 scale = Vector2(0.1, 0.1)
 sprite_frames = SubResource("SpriteFrames_o20oj")
